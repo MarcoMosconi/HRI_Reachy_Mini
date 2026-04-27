@@ -49,11 +49,11 @@ topic_idx = 0
 with ReachyMini(media_backend="no_media") as mini:
     while topic_idx < len(questions):
         current_topic = questions[topic_idx]
-        speak(current_topic)
+        speak(current_topic, mini=mini)
         
-        user_input = listen()  # TODO: implement listen() from Exercise 1
+        user_input = listen(mini=mini)  
         if not user_input:
-            speak("Sorry I didn't catch that.")
+            speak("Sorry I didn't catch that.", mini=mini)
             continue
 
         prompt = f"[Current topic: {current_topic}]\nUser said: {user_input}"
@@ -89,7 +89,7 @@ with ReachyMini(media_backend="no_media") as mini:
 
         # parse text response into python object
         response = ResponseWithState.model_validate_json(raw)
-        speak(response.reply)
+        speak(response.reply, mini=mini)
 
         # check if should change topic
         if response.next_state:
