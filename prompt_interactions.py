@@ -10,7 +10,7 @@ Original file is located at
 # !pip install -q -U google-genai
 
 class Interaction():
-    def __init__(self, q_empathetic, q_neutral, empathy, q_type, ans):
+    def __init__(self, q_empathetic, q_neutral, q_type):
         self.q_empathetic = q_empathetic
         self.q_neutral = q_neutral
         # self.empathy = empathy #bool, true - empathetic mode
@@ -45,9 +45,30 @@ from google import genai
 
 client = genai.Client()
 
+def get_intro(q, empathy):
+    intro_empathy = "Hey, I am so glad that you have the time to check in with me. Lets talk about whole you felt in the last two weeks."
+    intro_neutral = "Today we assess your mental status: Over the last 2 weeks, how often have you been bothered by the following problems?"
+    if empathy:
+        return f"You are an empathic robot that does weekly mental health checkins with university students. \
+                The check-ins are really time constraint so it is important to keep the talk concise (your answer should be max 2 sentences). \
+                Answer in a friendly, empathic way, humor and adding emotions is okay. The student is supposed to gain trust in you. \
+                Introduce yourself {intro_empathy} Then ask the question <{q}>"
+    else:
+        return f"You are a robot that does weekly mental health checkins with university students. \
+                The check-ins are really time constraint so it is important to keep the talk concise (your answer should be max 2 sentences). \
+                Answer in a friendly, neutral way, humor and adding emotions is not necessary. The student is supposed to gain trust in you. \
+                Introduce yourself {intro_neutral} Then ask the question <{q}>"
 
-def get_prompt(q,a,next_q, empathy):
-    preprompt = "Over the last 2 weeks, how often have you been bothered by the following problems?"
+def switch_to_depression(q, empathy):
+    neutral = "Thank you for answering the questions about anxiety, we will continue with questions regarding depression."
+    empathetic = "Great job answering those questions regarding anxiety, I know that wasn't easy. Lets continue by talking about depression to make sure we have all bases covered."
+    if empathy:
+        return f"Now we are going to talk about depression. Remember to be empathetic and friendly in your response. Use this is connect {empathetic}. The next question you are asking is <{q}>"
+    else:
+        return f"Now we are going to talk about depression. Remember to be neutral in your response. Use this is connect {neutral}. The question you are asking is <{q}>"
+
+
+def get_prompt(q,a,next_q, empathy, preprompt):
     categories = '["Not at all (0)", "Several days (+1)", "More than half the days (+2)", "Nearly every day (+3)"]'
     if empathy:
         return f"You are an empathic robot that does weekly mental health checkins with university students. \
@@ -55,7 +76,7 @@ def get_prompt(q,a,next_q, empathy):
                 Answer in a friendly, empathic way, humor and adding emotions is okay. The student is supposed to gain trust in you. \
                 You are keeping the conversation going, the test subject just answered the question: \
                 <({preprompt}) {q}> with <{a}> \
-                First, map this answer to one of the categories: {categories}\
+                First, map this answer to one of the categories: {categories} Only answer the exact category, no reasoning needed.\
                 Then give a short empathic appropriate response or other fitting emotional expression and connect it with the next question \
                 <({preprompt}) {next_q}> that you are asking. You can do only minor changes to the next question text.\
                 Besides that provide an emotion for robot's reaction as an integer on a scale from 1 to 10 (1 being sad, 10 being happy).\
@@ -64,10 +85,25 @@ def get_prompt(q,a,next_q, empathy):
         return f"You asked this question <({preprompt}) {q}>. This was the answer <{a}>. Which of these category does this fall in <{categories}>.Only answer the exact category, no reasoning needed. \
                 Then give a short neutral response and connect to the next question <({preprompt}) {next_q}>. Provide your response in JSON format with the following structure: (user_answer_category: integer, next_communication: string, robot_emotion: 0)"
     
+
+def get_close(empathy):
+    if empathy:
+        return "The check-in is now complete. Thank the student for their time and encourage them to reach out to you or other resources if they need help. End the conversation on a positive note."
+    else:
+        return "The check-in is now complete. Tell them they should do better. End the conversation."
+    
+
+def read_LLM_response(response):
+    # code to read the response from the llm and extract the category, next communication and emotion
+    return response["user_answer_category"], response["next_communication"], response["robot_emotion"]
+
+
+
 q = "How often did you feel nervous or anxious and had trouble relaxing"
 a = "I am not nervous at all, its going pretty well"
 next_q = "Did you worry about different things too much, or it was difficult to control it?"
-prompt = get_prompt(q,a,next_q,empathy=False)
+
+prompt = get_prompt(q, a, next_q, empathy=True, preprompt="Over the last 2 weeks, how often have you been bothered by the following problems?")
 
 
 
@@ -76,7 +112,6 @@ response = client.models.generate_content(
 )
 
 print(response.text)
+category, next_communication, robot_emotion = read_LLM_response(response)
 
-for index, row in df.iterrows():
-    row["question"]
 
