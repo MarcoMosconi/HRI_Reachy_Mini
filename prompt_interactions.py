@@ -9,6 +9,9 @@ Original file is located at
 
 # !pip install -q -U google-genai
 
+import pandas as pd
+import json
+
 class Interaction():
     def __init__(self, q_empathetic, q_neutral, q_type):
         self.q_empathetic = q_empathetic
@@ -29,8 +32,6 @@ class Interaction():
         else: 
             return self.q_neutral
         
-
-import pandas as pd
 
 def get_csv(path):
     df = pd.read_csv(path)
@@ -95,8 +96,22 @@ def get_close(empathy):
 
 def read_LLM_response(response):
     # code to read the response from the llm and extract the category, next communication and emotion
-    return response["user_answer_category"], response["next_communication"], response["robot_emotion"]
+    text = response.text.strip()
 
+    # Remove markdown code fences if present
+    if text.startswith("```"):
+        text = text.split("```")[1]  # remove first ```
+        if text.startswith("json"):
+            text = text[len("json"):].strip()
+        text = text.rsplit("```", 1)[0].strip()
+
+    parsed = json.loads(text)
+
+    return (
+        parsed["user_answer_category"],
+        parsed["next_communication"],
+        parsed["robot_emotion"],
+    )
 
 
 q = "How often did you feel nervous or anxious and had trouble relaxing"
@@ -113,5 +128,6 @@ response = client.models.generate_content(
 
 print(response.text)
 category, next_communication, robot_emotion = read_LLM_response(response)
+print(category, next_communication, robot_emotion)
 
 
