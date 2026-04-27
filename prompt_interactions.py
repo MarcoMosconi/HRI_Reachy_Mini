@@ -88,6 +88,8 @@ def get_prompt(q,a,next_q, empathy, preprompt):
     
 
 def get_close(empathy):
+    # TODO: needs to rate alcohol answer and returns same format as before 
+    # TODO: have accumulated score and give overall assessment at the end
     if empathy:
         return "The check-in is now complete. Thank the student for their time and encourage them to reach out to you or other resources if they need help. End the conversation on a positive note."
     else:

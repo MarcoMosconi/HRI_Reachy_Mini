@@ -13,7 +13,7 @@ sys.path.append(parent_dir)
     
 from dialogue import speak, listen
 from emotions import play_emotion
-from prompt_interactions import get_csv, get_prompt, Interaction, get_intro, get_close
+from prompt_interactions import get_csv, get_prompt, Interaction, get_intro, get_close, read_LLM_response
 
 
 df = get_csv("question_tree.csv")
@@ -62,13 +62,25 @@ for i, interaction in enumerate(interactions):
                 preprompt = "Hey lets talk about your alcohol consumption. I just want to see were we stand there."
             prompt = get_prompt(interaction.get_question(empathy), user_input, interactions[i+1].get_question(empathy), empathy=empathy, preprompt=preprompt)
         else:
+            # TODO: add overall assessment at the end based on all the answers and assessments from before
+            # TODO: accumalted score and give overall assessment at the end
             prompt = get_close(empathy=empathy)
 
         
-        llm_text = client.models.generate_content(
-            model="gemini-2.5-flash", contents=prompt
-        )
-        speak(llm_text, mini=mini, emotion=emotion_speak)
+        if i == 0:
+            next_communication = client.models.generate_content(
+                model="gemini-2.5-flash", contents=prompt
+            )
+        else:
+            llm_text = client.models.generate_content(
+                model="gemini-2.5-flash", contents=prompt
+            )
+            category, next_communication, robot_emotion = read_LLM_response(llm_text)
+            interactions[i-1].ans = user_input
+            interactions[i-1].assessment = category
+            next_emotion = robot_emotion
+
+        speak(next_communication, mini=mini, emotion=emotion_speak)
         user_input = listen(mini=mini)  
         if not user_input:
             speak("Sorry I didn't catch that.", mini=mini)
