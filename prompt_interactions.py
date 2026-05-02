@@ -77,13 +77,15 @@ def get_prompt(q,a,next_q, empathy, preprompt):
                 Answer in a friendly, empathic way, humor and adding emotions is okay. The student is supposed to gain trust in you. \
                 You are keeping the conversation going, the test subject just answered the question: \
                 <({preprompt}) {q}> with <{a}> \
-                First, map this answer to one of the categories: {categories} Only answer the exact category, no reasoning needed.\
+                First, map this answer to one of the categories: {categories} Only answer the exact digit of the category, no reasoning needed. \
+                For example, if you classify the digit as 'Several days  (+1)', answer '1'. \
                 Then give a short empathic appropriate response or other fitting emotional expression and connect it with the next question \
                 <({preprompt}) {next_q}> that you are asking. You can do only minor changes to the next question text.\
                 Besides that provide an emotion for robot's reaction as an integer on a scale from 1 to 10 (1 being sad, 10 being happy).\
                 Provide your response in JSON format with the following structure: (user_answer_category: integer, next_communication: string, robot_emotion: integer)"
     else:
-        return f"You asked this question <({preprompt}) {q}>. This was the answer <{a}>. Which of these category does this fall in <{categories}>.Only answer the exact category, no reasoning needed. \
+        return f"You asked this question <({preprompt}) {q}>. This was the answer <{a}>. Which of these category does this fall in <{categories}>.Only answer the exact digit of thecategory, no reasoning needed. \
+                For example, if you classify the digit as 'Several days  (+1)', answer '1'. \
                 Then give a short neutral response and connect to the next question <({preprompt}) {next_q}>. Provide your response in JSON format with the following structure: (user_answer_category: integer, next_communication: string, robot_emotion: 0)"
     
 
@@ -116,20 +118,20 @@ def read_LLM_response(response):
     )
 
 
-q = "How often did you feel nervous or anxious and had trouble relaxing"
-a = "I am not nervous at all, its going pretty well"
-next_q = "Did you worry about different things too much, or it was difficult to control it?"
+# q = "How often did you feel nervous or anxious and had trouble relaxing"
+# a = "I am not nervous at all, its going pretty well"
+# next_q = "Did you worry about different things too much, or it was difficult to control it?"
 
-prompt = get_prompt(q, a, next_q, empathy=True, preprompt="Over the last 2 weeks, how often have you been bothered by the following problems?")
+# prompt = get_prompt(q, a, next_q, empathy=True, preprompt="Over the last 2 weeks, how often have you been bothered by the following problems?")
 
 
 
-response = client.models.generate_content(
-    model="gemini-2.5-flash", contents=prompt
-)
+# response = client.models.generate_content(
+#     model="gemini-2.5-flash", contents=prompt
+# )
 
-print(response.text)
-category, next_communication, robot_emotion = read_LLM_response(response)
-print(category, next_communication, robot_emotion)
+# print(response.text)
+# category, next_communication, robot_emotion = read_LLM_response(response)
+# print(category, next_communication, robot_emotion)
 
 

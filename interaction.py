@@ -6,7 +6,6 @@ import sys
 import re
 from reachy_mini import ReachyMini
 
-
 current_dir = os.path.dirname(__file__)
 parent_dir = os.path.abspath(os.path.join(current_dir, ".."))
 sys.path.append(parent_dir)
@@ -35,13 +34,13 @@ emotion_speak = "welcoming1"
 anxiety = 4
 depression = 10
 user_input = None
+depression_score = 0
 
-for i, interaction in enumerate(interactions):
-    with ReachyMini(media_backend="no_media") as mini:
-
+with ReachyMini(media_backend="no_media") as mini:
+    for i, interaction in enumerate(interactions):
         if i == 0:
             prompt = get_intro(interaction.get_question(empathy), empathy)
-        if i > 0 and i < anxiety:
+        elif i > 0 and i < anxiety:
             preprompt = "Over the last 2 weeks, how often have you been bothered by the following problems?"
             prompt = get_prompt(interaction.get_question(empathy), user_input, interactions[i+1].get_question(empathy), empathy=empathy, preprompt=preprompt)
         elif i == anxiety:
@@ -65,12 +64,12 @@ for i, interaction in enumerate(interactions):
             # TODO: add overall assessment at the end based on all the answers and assessments from before
             # TODO: accumalted score and give overall assessment at the end
             prompt = get_close(empathy=empathy)
-
         
         if i == 0:
-            next_communication = client.models.generate_content(
-                model="gemini-2.5-flash", contents=prompt
-            )
+            # next_communication = client.models.generate_content(
+            #     model="gemini-2.5-flash", contents=prompt
+            # )
+            next_communication = chat.send_message(prompt).text
         else:
             llm_text = client.models.generate_content(
                 model="gemini-2.5-flash", contents=prompt
@@ -79,6 +78,8 @@ for i, interaction in enumerate(interactions):
             interactions[i-1].ans = user_input
             interactions[i-1].assessment = category
             next_emotion = robot_emotion
+            print(next_emotion)
+            depression_score += int(category)
 
         speak(next_communication, mini=mini, emotion=emotion_speak)
         user_input = listen(mini=mini)  
@@ -87,5 +88,4 @@ for i, interaction in enumerate(interactions):
             # TODO: maybe add retry logic here, for now just
             continue
              
-        
-
+print(depression_score)
