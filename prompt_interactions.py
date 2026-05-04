@@ -42,10 +42,6 @@ def get_csv(path):
 df = get_csv("question_tree.csv")
 # print(len(df))
 
-from google import genai
-
-client = genai.Client()
-
 def get_intro(q, empathy):
     intro_empathy = "Hey, I am so glad that you have the time to check in with me. Lets talk about whole you felt in the last two weeks."
     intro_neutral = "Today we assess your mental status: Over the last 2 weeks, how often have you been bothered by the following problems?"
@@ -100,7 +96,11 @@ def get_close(empathy):
 
 def read_LLM_response(response):
     # code to read the response from the llm and extract the category, next communication and emotion
-    text = response.text.strip()
+    # Handle both plain text strings and response objects
+    if isinstance(response, str):
+        text = response.strip()
+    else:
+        text = response.text.strip()
 
     # Remove markdown code fences if present
     if text.startswith("```"):

@@ -1,6 +1,7 @@
 # Direct Python dependencies inferred from the repository source files.
 edge-tts==7.2.8
 google-genai==1.74.0
+ollama
 pandas==3.0.2
 pydantic==2.13.3
 PyAudio

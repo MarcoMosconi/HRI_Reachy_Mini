@@ -15,10 +15,26 @@ from emotions import play_emotion
 from prompt_interactions import get_csv, get_prompt, Interaction, get_intro, get_close, read_LLM_response
 
 
-df = get_csv("question_tree.csv")
+# ============ LLM Configuration ============
+USE_OLLAMA = False  # Set to True to use Ollama, False for Google Gemini
+OLLAMA_MODEL = "qwen3"  # Change to your preferred Ollama model
 
-client = genai.Client()
-chat = client.chats.create(model="gemini-2.5-flash")
+# Initialize LLM client and create response function
+if USE_OLLAMA:
+    import ollama
+    def get_llm_response(prompt):
+        """Send prompt to Ollama and get response text"""
+        response = ollama.generate(model=OLLAMA_MODEL, prompt=prompt, stream=False)
+        return response['response']
+else:
+    client = genai.Client()
+    chat = client.chats.create(model="gemini-2.5-flash")
+    def get_llm_response(prompt):
+        """Send prompt to Gemini and get response text"""
+        return chat.send_message(prompt).text
+# ==========================================
+
+df = get_csv("question_tree.csv")
 
 interactions = []
 for index, row in df.iterrows():
@@ -35,6 +51,14 @@ anxiety = 4
 depression = 10
 user_input = None
 depression_score = 0
+
+print("Connected to Reachy Mini! ")
+    
+# Wiggle antennas
+print("Wiggling antennas...")
+ReachyMini().goto_target(antennas=[0.5, -0.5], duration=0.5)
+ReachyMini().goto_target(antennas=[-0.5, 0.5], duration=0.5)
+ReachyMini().goto_target(antennas=[0, 0], duration=0.5)
 
 with ReachyMini(media_backend="no_media") as mini:
     for i, interaction in enumerate(interactions):
@@ -66,14 +90,9 @@ with ReachyMini(media_backend="no_media") as mini:
             prompt = get_close(empathy=empathy)
         
         if i == 0:
-            # next_communication = client.models.generate_content(
-            #     model="gemini-2.5-flash", contents=prompt
-            # )
-            next_communication = chat.send_message(prompt).text
+            next_communication = get_llm_response(prompt)
         else:
-            llm_text = client.models.generate_content(
-                model="gemini-2.5-flash", contents=prompt
-            )
+            llm_text = get_llm_response(prompt)
             category, next_communication, robot_emotion = read_LLM_response(llm_text)
             interactions[i-1].ans = user_input
             interactions[i-1].assessment = category
