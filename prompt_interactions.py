@@ -109,7 +109,21 @@ def read_LLM_response(response):
             text = text[len("json"):].strip()
         text = text.rsplit("```", 1)[0].strip()
 
-    parsed = json.loads(text)
+    # Extract JSON object from text (find first { and last })
+    json_start = text.find("{")
+    json_end = text.rfind("}")
+    if json_start != -1 and json_end != -1:
+        text = text[json_start:json_end + 1]
+
+    # Debug: print the extracted JSON to see what we're parsing
+    print(f"[DEBUG] Attempting to parse JSON: {text[:200]}...")
+    
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError as e:
+        print(f"[ERROR] JSON parsing failed: {e}")
+        print(f"[ERROR] Full response text:\n{text}")
+        raise
 
     return (
         parsed["user_answer_category"],

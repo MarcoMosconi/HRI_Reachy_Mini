@@ -16,8 +16,8 @@ from prompt_interactions import get_csv, get_prompt, Interaction, get_intro, get
 
 
 # ============ LLM Configuration ============
-USE_OLLAMA = False  # Set to True to use Ollama, False for Google Gemini
-OLLAMA_MODEL = "qwen3"  # Change to your preferred Ollama model
+USE_OLLAMA = True  # Set to True to use Ollama, False for Google Gemini
+OLLAMA_MODEL = "llama3.2:1b"  # Change to your preferred Ollama model
 
 # Initialize LLM client and create response function
 if USE_OLLAMA:
@@ -101,7 +101,7 @@ with ReachyMini(media_backend="no_media") as mini:
             depression_score += int(category)
 
         speak(next_communication, mini=mini, emotion=emotion_speak)
-        user_input = listen(mini=mini)  
+        user_input = listen(mini=mini, use_whisper=USE_OLLAMA)  
         if not user_input:
             speak("Sorry I didn't catch that.", mini=mini)
             # TODO: maybe add retry logic here, for now just

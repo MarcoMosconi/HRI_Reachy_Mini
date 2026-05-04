@@ -46,7 +46,15 @@ def speak(text, mini=None, emotion="welcoming1"):
 
 
 recognizer = sr.Recognizer()
-def listen(mini=None, emotion="attentive1"):
+
+def listen(mini=None, emotion="attentive1", use_whisper=False):
+    """Listen for user input and transcribe to text.
+    
+    Args:
+        mini: ReachyMini instance for animations
+        emotion: Emotion animation to play while listening
+        use_whisper: If True, use local Whisper model. If False, use Google Speech Recognition.
+    """
     audio = None
     stop_event = threading.Event()
 
@@ -74,8 +82,24 @@ def listen(mini=None, emotion="attentive1"):
     audio_thread.join()
     if audio is None:
         return ""
+    
     try:
-        text = recognizer.recognize_google(audio)
+        if use_whisper:
+            # Use local Whisper model (no internet required)
+            import whisper
+            import numpy as np
+            
+            # Convert audio to numpy array
+            audio_data = np.frombuffer(audio.get_wav_data(), dtype=np.int16).astype(np.float32) / 32768.0
+            
+            # Load Whisper model and transcribe
+            model = whisper.load_model("base")
+            result = model.transcribe(audio_data)
+            text = result["text"].strip()
+        else:
+            # Use Google Speech Recognition (requires internet)
+            text = recognizer.recognize_google(audio)
+        
         print(f"[User]: {text}")
         return text
     except sr.UnknownValueError:
@@ -83,6 +107,9 @@ def listen(mini=None, emotion="attentive1"):
         return ""
     except sr.RequestError:
         print("Speech recognition service unavailable.")
+        return ""
+    except Exception as e:
+        print(f"[Speech recognition error]: {e}")
         return ""
     
     
