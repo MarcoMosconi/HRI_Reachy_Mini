@@ -1,0 +1,5 @@
+# env
+reachy_mini_env/
+
+*.pyc
+__pycache__/
