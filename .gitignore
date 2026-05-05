@@ -3,3 +3,5 @@ reachy_mini_env/
 
 *.pyc
 __pycache__/
+
+api_key.txt

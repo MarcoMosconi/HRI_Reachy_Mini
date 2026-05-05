@@ -56,9 +56,9 @@ print("Connected to Reachy Mini! ")
     
 # Wiggle antennas
 print("Wiggling antennas...")
-ReachyMini().goto_target(antennas=[0.5, -0.5], duration=0.5)
-ReachyMini().goto_target(antennas=[-0.5, 0.5], duration=0.5)
-ReachyMini().goto_target(antennas=[0, 0], duration=0.5)
+ReachyMini().goto_target(antennas=[0.5, -0.5], duration=0.2)
+ReachyMini().goto_target(antennas=[-0.5, 0.5], duration=0.2)
+ReachyMini().goto_target(antennas=[0, 0], duration=0.01)
 
 with ReachyMini(media_backend="no_media") as mini:
     for i, interaction in enumerate(interactions):
