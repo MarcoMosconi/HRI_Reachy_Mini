@@ -16,7 +16,7 @@ from prompt_interactions import get_csv, get_prompt, Interaction, get_intro, get
 
 
 # ============ LLM Configuration ============
-USE_OLLAMA = True  # Set to True to use Ollama, False for Google Gemini
+USE_OLLAMA = False  # Set to True to use Ollama, False for Google Gemini
 OLLAMA_MODEL = "llama3.2:1b"  # Change to your preferred Ollama model
 
 # Initialize LLM client and create response function
