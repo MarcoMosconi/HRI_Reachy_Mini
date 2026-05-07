@@ -77,7 +77,7 @@ def get_prompt(q,a,next_q, empathy, preprompt):
                 For example, if you classify the digit as 'Several days  (+1)', answer '1'. \
                 Then give a short empathic appropriate response or other fitting emotional expression and connect it with the next question \
                 <({preprompt}) {next_q}> that you are asking. You can do only minor changes to the next question text.\
-                Besides that provide an emotion for robot's reaction as an integer on a scale from 1 to 10 (1 being sad, 10 being happy).\
+                Besides that provide an emotion for robot's reaction as an integer on a scale from 0 - sad, 1 - neutral, 2 - happy.\
                 Provide your response in JSON format with the following structure: (user_answer_category: integer, next_communication: string, robot_emotion: integer)"
     else:
         return f"You asked this question <({preprompt}) {q}>. This was the answer <{a}>. Which of these category does this fall in <{categories}>.Only answer the exact digit of thecategory, no reasoning needed. \
