@@ -64,7 +64,7 @@ for index, row in df.iterrows():
     interactions.append(interaction)
 
 empathy = True
-# emotion_speak = "welcoming1" 
+emotion_speak = None
 anxiety = 4
 depression = 10
 user_input = None
@@ -73,13 +73,15 @@ scores = {"GAD-7": [], "PHQ-9": [], "CAGE": []}
 
 print("Connected to Reachy Mini! ")
     
-# Wiggle antennas
-print("Wiggling antennas...")
-ReachyMini().goto_target(antennas=[0.5, -0.5], duration=0.2)
-ReachyMini().goto_target(antennas=[-0.5, 0.5], duration=0.2)
-ReachyMini().goto_target(antennas=[0, 0], duration=0.01)
 
 with ReachyMini(media_backend="no_media") as mini:
+
+    print("Wiggling antennas...")
+    mini.goto_target(antennas=[0.5, -0.5], duration=0.2)
+    mini.goto_target(antennas=[-0.5, 0.5], duration=0.2)
+    mini.goto_target(antennas=[0, 0], duration=0.01)
+
+
     for i, interaction in enumerate(interactions):
         if i == 0:
             prompt = get_intro(interaction.get_question(empathy), empathy)
@@ -150,6 +152,9 @@ with ReachyMini(media_backend="no_media") as mini:
             # next_emotion = robot_emotion
             # print(next_emotion)
             # depression_score += int(category)
+        
+        if emotion_speak is None:
+            emotion_speak = "dying1"
 
         speak(next_communication, mini=mini, emotion=emotion_speak)
         user_input = listen(mini=mini, use_whisper=USE_OLLAMA)  
