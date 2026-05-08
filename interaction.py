@@ -110,8 +110,8 @@ with ReachyMini(media_backend="no_media") as mini:
             else:
                 preprompt = "Hey lets talk about your alcohol consumption. I just want to see were we stand there."
             #list index out of range
-            # prompt = get_prompt(interaction.get_question(empathy), user_input, interactions[i+1].get_question(empathy), empathy=empathy, preprompt=preprompt)
-            prompt = get_prompt(interactions[i-1].get_question(empathy), user_input, "", empathy=empathy, preprompt=preprompt, section=interaction.q_type)
+            prompt = get_prompt(interactions[i-1].get_question(empathy), user_input, interaction.get_question(empathy), empathy=empathy, preprompt=preprompt)
+            # prompt = get_prompt(interactions[i-1].get_question(empathy), user_input, "", empathy=empathy, preprompt=preprompt, section=interaction.q_type)
 
         else:
             # TODO: add overall assessment at the end based on all the answers and assessments from before
