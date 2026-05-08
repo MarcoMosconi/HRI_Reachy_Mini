@@ -13,7 +13,7 @@ sys.path.append(parent_dir)
     
 from dialogue import speak, listen
 from emotions import play_emotion
-from prompt_interactions import get_csv, get_prompt, Interaction, get_intro, get_close, read_LLM_response
+from prompt_interactions import get_csv, get_prompt, Interaction, get_intro, get_close, read_LLM_response, final_question_assessment
 
 
 # ============ LLM Configuration ============
@@ -83,8 +83,9 @@ with ReachyMini(media_backend="no_media") as mini:
 
 
     i = 0
-    while i < len(interactions):
-        interaction = interactions[i]
+    while i < len(interactions)+1:
+        if i < len(interactions):
+            interaction = interactions[i]
         print(f"[Question {i+1}/{len(interactions)}] i={i}, section={interaction.q_type}")
     # for i, interaction in enumerate(interactions):
     #     print(f"[Question {i+1}/{len(interactions)}] i={i}, section={interaction.q_type}")        
@@ -92,7 +93,7 @@ with ReachyMini(media_backend="no_media") as mini:
             prompt = get_intro(interaction.get_question(empathy), empathy)
         elif i > 0 and i < anxiety:
             preprompt = "Over the last 2 weeks, how often have you been bothered by the following problems?"
-            prompt = get_prompt(interactions[i-1].get_question(empathy), user_input, interaction.get_question(empathy), empathy=empathy, preprompt=preprompt, section=interaction.q_type)
+            prompt = get_prompt(interactions[i-1].get_question(empathy), user_input, interaction.get_question(empathy), empathy=empathy, preprompt=preprompt, section=interactions[i-1].q_type)
         elif i == anxiety:
             if empathy:
                 preprompt = f"Great job answering those questions regarding anxiety, I know that wasn't easy. Lets continue by talking about depression to make sure we have all bases covered.\
@@ -100,10 +101,10 @@ with ReachyMini(media_backend="no_media") as mini:
             else:
                 preprompt = f"Thank you for answering the questions about anxiety, we will continue with questions regarding depression.\
                 Over the last 2 weeks, how often have you been bothered by the following problems?"
-            prompt = get_prompt(interactions[i-1].get_question(empathy), user_input, interaction.get_question(empathy), empathy=empathy, preprompt=preprompt, section=interaction.q_type)
+            prompt = get_prompt(interactions[i-1].get_question(empathy), user_input, interaction.get_question(empathy), empathy=empathy, preprompt=preprompt, section=interactions[i-1].q_type)
         elif i > anxiety and i < depression:
             preprompt = ""
-            prompt = get_prompt(interactions[i-1].get_question(empathy), user_input, interaction.get_question(empathy), empathy=empathy, preprompt=preprompt, section=interaction.q_type)
+            prompt = get_prompt(interactions[i-1].get_question(empathy), user_input, interaction.get_question(empathy), empathy=empathy, preprompt=preprompt, section=interactions[i-1].q_type)
         elif i == depression:
             if empathy:
                 preprompt = "I want to ask you some questions about your alcohol consumption."
@@ -111,13 +112,14 @@ with ReachyMini(media_backend="no_media") as mini:
                 preprompt = "Hey lets talk about your alcohol consumption. I just want to see were we stand there."
             #list index out of range
             # prompt = get_prompt(interaction.get_question(empathy), user_input, interactions[i+1].get_question(empathy), empathy=empathy, preprompt=preprompt)
-            prompt = get_prompt(interactions[i-1].get_question(empathy), user_input, "", empathy=empathy, preprompt=preprompt, section=interaction.q_type)
+            prompt = get_prompt(interactions[i-1].get_question(empathy), user_input, interaction.get_question(empathy), empathy=empathy, preprompt=preprompt, section=interactions[i-1].q_type)
 
         else:
             # TODO: add overall assessment at the end based on all the answers and assessments from before
             # TODO: accumalted score and give overall assessment at the end
-            prompt = get_close(empathy=empathy)
-        
+            prompt = final_question_assessment(interactions[i-1].get_question(empathy), user_input, empathy, preprompt)
+
+
         if i == 0:
             next_communication = get_llm_response(prompt)
         else:
@@ -141,7 +143,7 @@ with ReachyMini(media_backend="no_media") as mini:
                 next_emotion = robot_emotion
                 print(f"[Robot emotion]: {next_emotion}")
                 depression_score += int(category) 
-                section = interaction.q_type
+                section = interactions[i-1].q_type
                 if section in scores:
                     scores[section].append(int(category))
 
@@ -163,22 +165,24 @@ with ReachyMini(media_backend="no_media") as mini:
         speak(next_communication, mini=mini, emotion=emotion_speak)
         # print(f"[Question {i+1}/{len(interactions)}] i={i}, section={interaction.q_type}")
         #try listening up to 3 times 
-        user_input = None
-        for _ in range(3):           
-            user_input = listen(mini=mini, use_whisper=USE_OLLAMA)  
-            if user_input:
-                break
-            speak("Sorry I didn't catch that.", mini=mini)
+        
+        if i < len(interactions):
+            user_input = None
+            for _ in range(3):           
+                user_input = listen(mini=mini, use_whisper=USE_OLLAMA)  
+                if user_input:
+                    break
+                speak("Sorry I didn't catch that.", mini=mini)
 
-        if not user_input:
-            speak("Let's move on to the next question.", mini=mini)
-            i += 1
-            continue
+            if not user_input:
+                speak("Let's move on to the next question.", mini=mini)
+                i += 1
+                continue
         i += 1
     
-    close_prompt = get_close(empathy=empathy)
-    close_communication = get_llm_response(close_prompt)
-    speak(close_communication, mini=mini, emotion="proud1")
+    # close_prompt = get_close(empathy=empathy)
+    # close_communication = get_llm_response(close_prompt)
+    # speak(close_communication, mini=mini, emotion="proud1")
 
 gad_total = sum(scores["GAD-7"])
 if gad_total <= 4:

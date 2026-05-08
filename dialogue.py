@@ -62,7 +62,7 @@ def listen(mini=None, emotion="attentive1", use_whisper=False):
         nonlocal audio
         try:
             with sr.Microphone() as source:
-                recognizer.adjust_for_ambient_noise(source, duration=0.5)
+                recognizer.adjust_for_ambient_noise(source, duration=1)
                 print("[Listening...]")
                 audio = recognizer.listen(source, timeout=8)
         except sr.WaitTimeoutError:

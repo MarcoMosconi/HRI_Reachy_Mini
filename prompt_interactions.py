@@ -99,6 +99,28 @@ def get_close(empathy):
         return "The check-in is now complete. Tell them they should do better. End the conversation."
     
 
+def final_question_assessment(q, a, empathy, preprompt):
+        categories = '["No (0)", "Yes, but not in the last year (1)", "Yes, in the last year (2)"]'
+        category_instruction = "Map this answer to 0 if No, or 1 if Yes."    
+        if empathy:
+            return f"You are an empathic robot that does weekly mental health checkins with university students. \
+                The check-ins are really time constraint so it is important to keep the talk concise (your answer should be max 2 sentences). \
+                Answer in a friendly, empathic way, humor and adding emotions is okay. The student is supposed to gain trust in you. \
+                You are keeping the conversation going, the test subject just answered the question: \
+                <({preprompt}) {q}> with <{a}> \
+                First, map this answer to one of the categories: {categories} Only answer the exact digit of the category, no reasoning needed. \
+                For example, if you classify the digit as 'Several days  (+1)', answer '1'. \
+                The check-in is now complete. Thank the student for their time and encourage them to reach out to you or other resources if they need help. End the conversation on a positive note.\
+                Besides that provide an emotion for robot's reaction as an integer on a scale from 0 - sad, 1 - neutral, 2 - happy.\
+                Provide your response in JSON format with the following structure: (user_answer_category: integer, next_communication: string, robot_emotion: integer). " 
+        else:
+            return f"You asked this question <({preprompt}) {q}>. This was the answer <{a}>. Which of these category does this fall in <{categories}>.Only answer the exact digit of thecategory, no reasoning needed. \
+                For example, if you classify the digit as 'Several days  (+1)', answer '1'. \
+                The check-in is now complete. Tell them they should do better. End the conversation. \
+    .           Provide your response in JSON format with the following structure: (user_answer_category: integer, next_communication: string, robot_emotion: 0)"
+    
+
+
 def read_LLM_response(response):
     # code to read the response from the llm and extract the category, next communication and emotion
     # Handle both plain text strings and response objects
