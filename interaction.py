@@ -87,7 +87,7 @@ with ReachyMini(media_backend="no_media") as mini:
             prompt = get_intro(interaction.get_question(empathy), empathy)
         elif i > 0 and i < anxiety:
             preprompt = "Over the last 2 weeks, how often have you been bothered by the following problems?"
-            prompt = get_prompt(interaction[i-1].get_question(empathy), user_input, interactions.get_question(empathy), empathy=empathy, preprompt=preprompt)
+            prompt = get_prompt(interactions[i-1].get_question(empathy), user_input, interaction.get_question(empathy), empathy=empathy, preprompt=preprompt)
         elif i == anxiety:
             if empathy:
                 preprompt = f"Great job answering those questions regarding anxiety, I know that wasn't easy. Lets continue by talking about depression to make sure we have all bases covered.\
@@ -95,16 +95,16 @@ with ReachyMini(media_backend="no_media") as mini:
             else:
                 preprompt = f"Thank you for answering the questions about anxiety, we will continue with questions regarding depression.\
                 Over the last 2 weeks, how often have you been bothered by the following problems?"
-            prompt = get_prompt(interaction[i-1].get_question(empathy), user_input, interactions.get_question(empathy), empathy=empathy, preprompt=preprompt)
+            prompt = get_prompt(interactions[i-1].get_question(empathy), user_input, interaction.get_question(empathy), empathy=empathy, preprompt=preprompt)
         elif i > anxiety and i < depression:
             preprompt = ""
-            prompt = get_prompt(interaction[i-1].get_question(empathy), user_input, interactions.get_question(empathy), empathy=empathy, preprompt=preprompt)
+            prompt = get_prompt(interactions[i-1].get_question(empathy), user_input, interaction.get_question(empathy), empathy=empathy, preprompt=preprompt)
         elif i == depression:
             if empathy:
                 preprompt = "I want to ask you some questions about your alcohol consumption."
             else:
                 preprompt = "Hey lets talk about your alcohol consumption. I just want to see were we stand there."
-            prompt = get_prompt(interaction[i-1].get_question(empathy), user_input, interactions.get_question(empathy), empathy=empathy, preprompt=preprompt)
+            prompt = get_prompt(interactions[i-1].get_question(empathy), user_input, interaction.get_question(empathy), empathy=empathy, preprompt=preprompt)
         else:
             # TODO: add overall assessment at the end based on all the answers and assessments from before
             # TODO: accumalted score and give overall assessment at the end
