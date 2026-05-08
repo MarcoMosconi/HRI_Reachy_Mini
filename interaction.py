@@ -109,7 +109,7 @@ with ReachyMini(media_backend="no_media") as mini:
             if empathy:
                 preprompt = "I want to ask you some questions about your alcohol consumption."
             else:
-                preprompt = "Hey lets talk about your alcohol consumption. I just want to see were we stand there."
+                preprompt = "Hey lets talk about your alcohol consumption. I just want to see where we stand there."
             #list index out of range
             # prompt = get_prompt(interaction.get_question(empathy), user_input, interactions[i+1].get_question(empathy), empathy=empathy, preprompt=preprompt)
             prompt = get_prompt(interactions[i-1].get_question(empathy), user_input, interaction.get_question(empathy), empathy=empathy, preprompt=preprompt, section=interactions[i-1].q_type)
