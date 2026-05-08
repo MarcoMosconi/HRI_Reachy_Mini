@@ -45,6 +45,7 @@ else:
                 if i < retries - 1:
                     wait = 15* (i + 1)
                     print(f"[API error] {e} - retrying in {wait}s ")
+                    emotion_speak = "dying1"
                     time.sleep(wait)
                 else:
                     print(f"[API error] Failed after {retries} attempts: {e}")
@@ -73,7 +74,6 @@ scores = {"GAD-7": [], "PHQ-9": [], "CAGE": []}
 
 print("Connected to Reachy Mini! ")
     
-
 with ReachyMini(media_backend="no_media") as mini:
 
     print("Wiggling antennas...")
@@ -82,12 +82,17 @@ with ReachyMini(media_backend="no_media") as mini:
     mini.goto_target(antennas=[0, 0], duration=0.01)
 
 
-    for i, interaction in enumerate(interactions):
+    i = 0
+    while i < len(interactions):
+        interaction = interactions[i]
+        print(f"[Question {i+1}/{len(interactions)}] i={i}, section={interaction.q_type}")
+    # for i, interaction in enumerate(interactions):
+    #     print(f"[Question {i+1}/{len(interactions)}] i={i}, section={interaction.q_type}")        
         if i == 0:
             prompt = get_intro(interaction.get_question(empathy), empathy)
         elif i > 0 and i < anxiety:
             preprompt = "Over the last 2 weeks, how often have you been bothered by the following problems?"
-            prompt = get_prompt(interaction.get_question(empathy), user_input, interactions[i+1].get_question(empathy), empathy=empathy, preprompt=preprompt)
+            prompt = get_prompt(interaction.get_question(empathy), user_input, interactions[i+1].get_question(empathy), empathy=empathy, preprompt=preprompt, section=interaction.q_type)
         elif i == anxiety:
             if empathy:
                 preprompt = f"Great job answering those questions regarding anxiety, I know that wasn't easy. Lets continue by talking about depression to make sure we have all bases covered.\
@@ -95,17 +100,25 @@ with ReachyMini(media_backend="no_media") as mini:
             else:
                 preprompt = f"Thank you for answering the questions about anxiety, we will continue with questions regarding depression.\
                 Over the last 2 weeks, how often have you been bothered by the following problems?"
-            prompt = get_prompt(interaction.get_question(empathy), user_input, interactions[i+1].get_question(empathy), empathy=empathy, preprompt=preprompt)
-        elif i > anxiety and i <= depression:
+            prompt = get_prompt(interaction.get_question(empathy), user_input, interactions[i+1].get_question(empathy), empathy=empathy, preprompt=preprompt, section=interaction.q_type)
+        elif i > anxiety and i < depression:
             preprompt = ""
-            prompt = get_prompt(interaction.get_question(empathy), user_input, interactions[i+1].get_question(empathy), empathy=empathy, preprompt=preprompt)
+            prompt = get_prompt(interaction.get_question(empathy), user_input, interactions[i+1].get_question(empathy), empathy=empathy, preprompt=preprompt, section=interaction.q_type)
         elif i == depression:
             if empathy:
                 preprompt = "I want to ask you some questions about your alcohol consumption."
             else:
                 preprompt = "Hey lets talk about your alcohol consumption. I just want to see were we stand there."
-            prompt = get_prompt(interaction.get_question(empathy), user_input, interactions[i+1].get_question(empathy), empathy=empathy, preprompt=preprompt)
+            #list index out of range
+            # prompt = get_prompt(interaction.get_question(empathy), user_input, interactions[i+1].get_question(empathy), empathy=empathy, preprompt=preprompt)
+            prompt = get_prompt(interaction.get_question(empathy), user_input, "", empathy=empathy, preprompt=preprompt, section=interaction.q_type)
+
         else:
+            #把計分的方式放在這裡
+            #考慮我們到底要不要用使用者的回答來完成機器人的emotion
+            #為什麼即便沒有回答，他還是會進入下一題，我們的prepromt 或是LLM的內容需要更正
+
+
             # TODO: add overall assessment at the end based on all the answers and assessments from before
             # TODO: accumalted score and give overall assessment at the end
             prompt = get_close(empathy=empathy)
@@ -118,8 +131,11 @@ with ReachyMini(media_backend="no_media") as mini:
                 try:
                     llm_text = get_llm_response(prompt)
                     category, next_communication, robot_emotion = read_LLM_response(llm_text)
+                    if attempt > 0:
+                        speak(f"Sorry for the delay. I heard you say: {user_input}", mini=mini)
                     break 
                 except Exception as e:
+                    #這邊好像沒有在運作，無論如何都會跳到下一題
                     print(f"[Attempt {attempt + 1} / 3 failed]: {e}")
                     if attempt == 2:  # if it is the last attempt, raise the error
                         print("[Skipping this question]")
@@ -129,20 +145,16 @@ with ReachyMini(media_backend="no_media") as mini:
                 interactions[i-1].ans = user_input
                 interactions[i-1].assessment = category
                 next_emotion = robot_emotion
-                print(next_emotion)
-                # depression_score += int(category) 
+                print(f"[Robot emotion]: {next_emotion}")
+                depression_score += int(category) 
                 section = interaction.q_type
                 if section in scores:
                     scores[section].append(int(category))
 
-                if category == 0:
-                    emotion_speak = "proud1"
-                elif category == 1:
-                    emotion_speak = "attentive1"
-                elif category == 2:
-                    emotion_speak = "sad1"
-                elif category == 3:
-                    emotion_speak = "sad2"
+                #改成用負面、中性、正面三種情緒就好
+                #現在沒有聲音？
+                emotion_map = {0: "proud1", 1: "attentive1", 2: "sad1", 3: "sad2"}
+                emotion_speak = emotion_map.get(category, "attentive1")
 
 
             # llm_text = get_llm_response(prompt)
@@ -157,11 +169,25 @@ with ReachyMini(media_backend="no_media") as mini:
             emotion_speak = "dying1"
 
         speak(next_communication, mini=mini, emotion=emotion_speak)
-        user_input = listen(mini=mini, use_whisper=USE_OLLAMA)  
-        if not user_input:
+        # print(f"[Question {i+1}/{len(interactions)}] i={i}, section={interaction.q_type}")
+        #try listening up to 3 times 
+        user_input = None
+        for _ in range(3):           
+            user_input = listen(mini=mini, use_whisper=USE_OLLAMA)  
+            if user_input:
+                break
             speak("Sorry I didn't catch that.", mini=mini)
-            # TODO: maybe add retry logic here, for now just
+
+        if not user_input:
+            speak("Let's move on to the next question.", mini=mini)
+            #使用者沒有回答跳過此題的計分
+            i += 1
             continue
+        i += 1
+    
+    close_prompt = get_close(empathy=empathy)
+    close_communication = get_llm_response(close_prompt)
+    speak(close_communication, mini=mini, emotion="proud1")
 
 gad_total = sum(scores["GAD-7"])
 if gad_total <= 4:
@@ -186,7 +212,7 @@ else:
     phq_level = "Severe depression"
  
 cage_total = sum(scores["CAGE"])
-cage_level = "High risk" if cage_total >= 2 else "Low risk"
+cage_level = "High risk" if cage_total <= 1 else "Low risk"
  
 print("\n" + "="*40)
 print("ASSESSMENT COMPLETE")

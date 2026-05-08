@@ -65,8 +65,13 @@ def switch_to_depression(q, empathy):
         return f"Now we are going to talk about depression. Remember to be neutral in your response. Use this is connect {neutral}. The question you are asking is <{q}>"
 
 
-def get_prompt(q,a,next_q, empathy, preprompt):
-    categories = '["Not at all (0)", "Several days (+1)", "More than half the days (+2)", "Nearly every day (+3)"]'
+def get_prompt(q,a,next_q, empathy, preprompt, section = "GAD-7"):
+    if section == "CAGE":
+        categories = '["No (0)", "Yes, but not in the last year (1)", "Yes, in the last year (2)"]'
+        category_instruction = "Map this answer to 0 if No, or 1 if Yes."    
+    else:
+        categories = '["Not at all (0)", "Several days (+1)", "More than half the days (+2)", "Nearly every day (+3)"]'
+        category_instructions = "Map this answer to one of the categories"
     if empathy:
         return f"You are an empathic robot that does weekly mental health checkins with university students. \
                 The check-ins are really time constraint so it is important to keep the talk concise (your answer should be max 2 sentences). \
