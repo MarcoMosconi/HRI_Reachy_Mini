@@ -11,7 +11,7 @@ import threading
 
 emotions = RecordedMoves("pollen-robotics/reachy-mini-emotions-library")
 
-async def speak_neural(text, voice="en-US-AndrewMultilingualNeural", rate="+0%", pitch="+0Hz"):
+async def speak_neural(text, voice="en-US-AndrewMultilingualNeural", rate="+5%", pitch="+30Hz"):
     communicate = edge_tts.Communicate(text, voice=voice, rate=rate, pitch=pitch)
     await communicate.save("speech.mp3")
 
@@ -63,6 +63,9 @@ def listen(mini=None, emotion="attentive1", use_whisper=False):
         try:
             with sr.Microphone() as source:
                 recognizer.adjust_for_ambient_noise(source, duration=1)
+                recognizer.pause_threshold = 1.5 # seconds of silence before speech is considered finished
+                recognizer.non_speaking_duration = 0.8 #amount of silence retained around speech
+                recognizer.dynamic_energy_threshold = True #automatic microphone sensitivity adjustment
                 print("[Listening...]")
                 audio = recognizer.listen(source, timeout=8)
         except sr.WaitTimeoutError:
