@@ -7,6 +7,7 @@ import re
 from reachy_mini import ReachyMini
 import time
 import pandas as pd
+import random
 
 current_dir = os.path.dirname(__file__)
 parent_dir = os.path.abspath(os.path.join(current_dir, ".."))
@@ -48,13 +49,21 @@ def send_chat_with_retry(chat, prompt, retries=3):
                 print(f"[API error] Failed after {retries} attempts: {e}")
                 raise e
 
+EMPATHY_MODE = False  # True = empathetic, False = neutral
+
 # Define a prompt that helps with DST
-system_prompt = "You are a friendly and empathetic social robot conducting a brief weekly mental health check-in with a university student. Your name is BillyBob. \
-Your purpose is to help the student reflect on their week, gently assess their mental state, and offer supportive responses. You are not a therapist — you are a caring, non-judgmental companion. Always encourage the student to speak to a counsellor or trusted person if they express serious distress. \
-Keep your responses to maximum 2 sentences. Do not ask follow-up questions."
+
+if EMPATHY_MODE:
+    system_prompt = "You are a friendly and empathetic social robot conducting a brief weekly mental health check-in with a university student. Your name is BillyBob. \
+                    Your purpose is to help the student reflect on their week, gently assess their mental state, and offer supportive responses. You are not a therapist — you are a caring, non-judgmental companion. Always encourage the student to speak to a counsellor or trusted person if they express serious distress. \
+                    Keep your responses to maximum 2 sentences. Do not ask follow-up questions."
+else:
+    system_prompt = "You are a social robot conducting a brief weekly mental health check-in with a university student. Your name is BillyBob. \
+                    Your purpose is to help the student reflect on their week, assess their mental state, and offer appropriate short responses, but not empathetic. You are not a therapist — you are a very neutral, non-judgmental companion. Encourage the student to speak to a counsellor or trusted person if they express serious distress. \
+                    Keep your responses to maximum 2 sentences. Do not ask follow-up questions."
 
 class ResponseWithState(BaseModel):
-    reply: str = Field(description="Empathetic response to the user input, based on the current topic")
+    reply: str = Field(description="Empathetic response to the user input, based on the current topic") #TODO: is this even used anywhere
     next_state: bool = Field(description="True if the conversation has wrapped up and is ready to move to the next topic")
 
 # pass this config when creating a chat
@@ -73,7 +82,7 @@ config = GenerateContentConfig(
 #     "It was lovely chatting with you. Take care and goodbye!"
 # ]
 
-EMPATHY_MODE = True  # True = empathetic, False = neutral
+
 CSV_PATH = os.path.join(parent_dir, "question_tree.csv")
 
 df = pd.read_csv(CSV_PATH)
@@ -97,7 +106,14 @@ chat = client.chats.create(model="gemini-2.5-flash",
 scores = {"GAD-7": [], "PHQ-9": [], "CAGE": []}
 
 topic_idx = 0
+
+hello_text = "Hi there! Welcome to our mental health check-up!" if EMPATHY_MODE else "Hi! We will now do a mental health check-up."
+goodbye_text = "That's all I had to ask. Thank you and have a nice day!" if EMPATHY_MODE else "We reached the end of the check-up. Thank you and have a nice day!"
+
 with ReachyMini(media_backend="no_media") as mini:
+
+    speak(hello_text, mini=mini)
+
     while topic_idx < len(questions):
         # current_topic = questions[topic_idx]
         # speak(current_topic, mini=mini)
@@ -132,6 +148,7 @@ with ReachyMini(media_backend="no_media") as mini:
             "2 = More than half the days\n"
             "3 = Nearly every day\n"
             "Respond with only a single digit: 0, 1, 2, or 3. "
+            "If the frequency of experiencing the asked symptoms is not clearly stated, try to infer it based on the question and user's answer to the best of your abilities but do not make any major assumptions. "
             "If the answer is unclear, respond with 0.\n\n"
             "User answer: " + user_input
         )
@@ -149,14 +166,18 @@ with ReachyMini(media_backend="no_media") as mini:
             print(f"I've classified your response as {classification}.")
             scores[section].append(classification)
 
+            
+
             if classification == 0:
-                play_emotion(mini, "proud1")
+                options = ["proud1", "proud2", "loving1", "cheerful1"] if EMPATHY_MODE else ["proud1"]      
             elif classification == 1:
-                play_emotion(mini, "attentive1")
+                options = ["attentive1", "attentive2","thoughtful1", "thoughtful2"] if EMPATHY_MODE else ["attentive1"]              
             elif classification == 2:
-                play_emotion(mini, "sad2")
+                options = ["uncertain1", "helpful1", "helpful2", "curious1"] if EMPATHY_MODE else ["frustrated1"]   
             elif classification == 3:
-                play_emotion(mini, "sad2")
+                options = ["sad1", "sad2", "lonely1", "frustrated1"] if EMPATHY_MODE else ["frustrated1"]   
+
+            play_emotion(mini, (random.choice(options)))
         except Exception as e:
             print(f"Classification failed: {e}")
 
@@ -171,6 +192,9 @@ with ReachyMini(media_backend="no_media") as mini:
             print(f"[Chat failed]: {e}")
             speak("I'm sorry, I'm having technical difficulties. We'll have to stop here for today. Thank you for your time.", mini=mini)
             break
+
+    speak(goodbye_text, mini=mini)
+
 
 gad_total = sum(scores["GAD-7"])
 if gad_total <= 4:
