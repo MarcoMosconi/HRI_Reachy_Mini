@@ -6,6 +6,7 @@ import sys
 import re
 from reachy_mini import ReachyMini
 import time
+import random
 
 current_dir = os.path.dirname(__file__)
 parent_dir = os.path.abspath(os.path.join(current_dir, ".."))
@@ -146,9 +147,17 @@ with ReachyMini(media_backend="no_media") as mini:
                 section = interactions[i-1].q_type
                 if section in scores:
                     scores[section].append(int(category))
-
-                emotion_map = {0: "proud1", 1: "attentive1", 2: "sad1", 3: "sad2"}
+                
+                options_0 = ["proud1", "proud2", "loving1", "cheerful1"] if empathy else ["attentive1", "attentive2"]      
+                options_1 = ["attentive1", "attentive2","thoughtful1", "thoughtful2"] if empathy else ["attentive1", "attentive2"]              
+                options_2 = ["uncertain1", "helpful1", "helpful2", "curious1"] if empathy else ["attentive1", "attentive2"]   
+                options_3 = ["sad1", "sad2", "lonely1", "frustrated1"] if empathy else ["attentive1", "attentive2"]   
+                
+                emotion_map = {0: random.choice(options_0), 1: random.choice(options_1), 2: random.choice(options_2), 3: random.choice(options_3)}
                 emotion_speak = emotion_map.get(category, "attentive1")
+
+                # emotion_map = {0: "proud1", 1: "attentive1", 2: "sad1", 3: "sad2"}
+                # emotion_speak = emotion_map.get(robot_emotion, "attentive1")
 
 
             # llm_text = get_llm_response(prompt)

@@ -80,6 +80,7 @@ def get_prompt(q,a,next_q, empathy, preprompt, section = "GAD-7"):
                 <({preprompt}) {q}> with <{a}> \
                 First, map this answer to one of the categories: {categories} Only answer the exact digit of the category, no reasoning needed. \
                 For example, if you classify the digit as 'Several days  (+1)', answer '1'. \
+                If the frequency of experiencing the asked symptoms is not clearly stated, try to infer it based on the question and user's answer to the best of your abilities but do not make any major assumptions. \
                 Then give a short empathic appropriate response or other fitting emotional expression and connect it with the next question \
                 <({preprompt}) {next_q}> that you are asking. You can do only minor changes to the next question text.\
                 Besides that provide an emotion for robot's reaction as an integer on a scale from 0 - sad, 1 - neutral, 2 - happy.\
@@ -87,7 +88,7 @@ def get_prompt(q,a,next_q, empathy, preprompt, section = "GAD-7"):
     else:
         return f"You asked this question <({preprompt}) {q}>. This was the answer <{a}>. Which of these category does this fall in <{categories}>.Only answer the exact digit of thecategory, no reasoning needed. \
                 For example, if you classify the digit as 'Several days  (+1)', answer '1'. \
-                Then give a short neutral response and connect to the next question <({preprompt}) {next_q}>. Provide your response in JSON format with the following structure: (user_answer_category: integer, next_communication: string, robot_emotion: 0)"
+                Then give a short neutral response and connect to the next question <({preprompt}) {next_q}>. Provide your response in JSON format with the following structure: (user_answer_category: integer, next_communication: string, robot_emotion: 1)"
     
 
 def get_close(empathy):
@@ -110,14 +111,15 @@ def final_question_assessment(q, a, empathy, preprompt):
                 <({preprompt}) {q}> with <{a}> \
                 First, map this answer to one of the categories: {categories} Only answer the exact digit of the category, no reasoning needed. \
                 For example, if you classify the digit as 'Several days  (+1)', answer '1'. \
+                If the frequency of experiencing the asked symptoms is not clearly stated, try to infer it based on the question and user's answer to the best of your abilities but do not make any major assumptions. \
                 The check-in is now complete. Thank the student for their time and encourage them to reach out to you or other resources if they need help. End the conversation on a positive note.\
                 Besides that provide an emotion for robot's reaction as an integer on a scale from 0 - sad, 1 - neutral, 2 - happy.\
                 Provide your response in JSON format with the following structure: (user_answer_category: integer, next_communication: string, robot_emotion: integer). " 
         else:
             return f"You asked this question <({preprompt}) {q}>. This was the answer <{a}>. Which of these category does this fall in <{categories}>.Only answer the exact digit of thecategory, no reasoning needed. \
                 For example, if you classify the digit as 'Several days  (+1)', answer '1'. \
-                The check-in is now complete. Tell them they should do better. End the conversation. \
-    .           Provide your response in JSON format with the following structure: (user_answer_category: integer, next_communication: string, robot_emotion: 0)"
+                The check-in is now complete. Tell them to have a nice day. End the conversation. \
+    .           Provide your response in JSON format with the following structure: (user_answer_category: integer, next_communication: string, robot_emotion: 1)"
     
 
 
